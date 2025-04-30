@@ -1,0 +1,23 @@
+#meet-sales-assistant-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Ensure the side panel is above other elements */
+#meet-sales-assistant-container iframe {
+    background: white;
+}
+
+/* Add a smooth transition for the side panel */
+#meet-sales-assistant-container {
+    transition: right 0.3s ease-in-out;
+}
+
+/* Ensure the side panel doesn't interfere with the main content */
+#meet-sales-assistant-container {
+    pointer-events: auto;
+}
+
+/* Add a subtle shadow to the side panel */
+#meet-sales-assistant-container {
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+} 

@@ -1,0 +1,34 @@
+{
+    "name": "@extension/injector",
+    "version": "0.4.3",
+    "description": "chrome extension - google meet",
+    "type": "module",
+    "private": true,
+    "sideEffects": true,
+    "files": [
+        "dist/**"
+    ],
+    "scripts": {
+        "clean:node_modules": "pnpx rimraf node_modules",
+        "clean:turbo": "rimraf .turbo",
+        "clean": "pnpm clean:turbo && pnpm clean:node_modules",
+        "build": "vite build",
+        "dev": "vite build --mode development",
+        "lint": "eslint .",
+        "lint:fix": "pnpm lint --fix",
+        "prettier": "prettier . --write --ignore-path ../../.prettierignore",
+        "type-check": "tsc --noEmit"
+    },
+    "dependencies": {
+        "protobufjs": "7.5.0",
+        "pako": "2.1.0",
+        "webextension-polyfill": "0.12.0",
+        "loglevel": "1.9.2",
+        "@extension/shared": "workspace:*",
+        "@extension/storage": "workspace:*"
+    },
+    "devDependencies": {
+        "@extension/tsconfig": "workspace:*",
+        "@extension/vite-config": "workspace:*"
+    }
+}

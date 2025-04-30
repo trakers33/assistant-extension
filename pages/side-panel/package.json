@@ -1,0 +1,56 @@
+{
+    "name": "@extension/side-panel",
+    "version": "0.0.1",
+    "description": "chrome extension - side panel",
+    "type": "module",
+    "private": true,
+    "sideEffects": true,
+    "files": [
+        "dist/**"
+    ],
+    "scripts": {
+        "clean:node_modules": "pnpx rimraf node_modules",
+        "clean:turbo": "rimraf .turbo",
+        "clean": "pnpm clean:turbo && pnpm clean:node_modules",
+        "build": "vite build",
+        "dev": "vite build --mode development",
+        "lint": "eslint .",
+        "lint:fix": "pnpm lint --fix",
+        "prettier": "prettier . --write --ignore-path ../../.prettierignore",
+        "type-check": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@extension/shared": "workspace:*",
+        "@extension/storage": "workspace:*",
+        "@extension/ui": "workspace:*",
+        "@extension/i18n": "workspace:*",
+        "@radix-ui/react-slot": "1.0.2",
+        "@radix-ui/react-progress": "1.0.3",
+        "@radix-ui/react-switch": "1.0.3",
+        "class-variance-authority": "0.7.0",
+        "clsx": "2.1.0",
+        "lucide-react": "0.344.0",
+        "tailwind-merge": "2.2.1",
+        "tailwindcss-animate": "1.0.7",
+        "webextension-polyfill": "0.12.0",
+        "@headlessui/react": "2.2.2",
+        "moment": "2.30.1",
+        "@types/webextension-polyfill": "^0.12.3"
+    },
+    "devDependencies": {
+        "@extension/tailwindcss-config": "workspace:*",
+        "@extension/tsconfig": "workspace:*",
+        "@extension/vite-config": "workspace:*",
+        "@types/chrome": "0.0.253",
+        "@types/node": "20.11.5",
+        "@types/react": "18.2.48",
+        "@types/react-dom": "18.2.18",
+        "typescript": "5.3.3"
+    },
+    "postcss": {
+        "plugins": {
+            "tailwindcss": {},
+            "autoprefixer": {}
+        }
+    }
+}
