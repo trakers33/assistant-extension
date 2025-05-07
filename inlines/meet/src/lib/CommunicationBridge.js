@@ -5,19 +5,22 @@ export default class CommunicationBridge {
 
     initialize() {
         // Listen for messages from the injector
-        window.addEventListener('meet-message', (event) => {
+        window.addEventListener('meet-message', event => {
             this.handleMessage(event.detail);
         });
     }
 
     sendMessage(type, payload) {
-        window.postMessage({
-            type: 'MEET_EXTENSION',
-            payload: {
-                type,
-                data: payload
-            }
-        }, '*');
+        window.postMessage(
+            {
+                type: 'MEET_EXTENSION',
+                payload: {
+                    type,
+                    data: payload,
+                },
+            },
+            '*',
+        );
     }
 
     handleMessage(message) {
@@ -41,4 +44,4 @@ export default class CommunicationBridge {
             // Add more message handlers as needed
         }
     }
-} 
+}

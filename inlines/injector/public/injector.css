@@ -1,5 +1,6 @@
 #meet-sales-assistant-container {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
+        'Helvetica Neue', sans-serif;
 }
 
 /* Ensure the side panel is above other elements */
@@ -20,4 +21,4 @@
 /* Add a subtle shadow to the side panel */
 #meet-sales-assistant-container {
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-} 
+}

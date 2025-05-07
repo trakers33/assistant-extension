@@ -20,22 +20,22 @@ export default class StyleManager {
     checkAudioActivity() {
         // Get audio data
         this.analyser.getByteTimeDomainData(this.audioDataArray);
-        
+
         // Calculate deviation from the center value (128)
         let sumDeviation = 0;
         for (let i = 0; i < this.audioDataArray.length; i++) {
             // Calculate how much each sample deviates from the center (128)
             sumDeviation += Math.abs(this.audioDataArray[i] - 128);
         }
-        
+
         const averageDeviation = sumDeviation / this.audioDataArray.length;
-        
+
         // If average deviation is above threshold, we have audio activity
         console.log('averageDeviation', averageDeviation);
         if (averageDeviation > this.silenceThreshold) {
             window.ws.sendJson({
                 type: 'SilenceStatus',
-                isSilent: false
+                isSilent: false,
             });
         }
     }
@@ -47,39 +47,39 @@ export default class StyleManager {
             memoryUsage: {
                 jsHeapSizeLimit: performance.memory?.jsHeapSizeLimit,
                 totalJSHeapSize: performance.memory?.totalJSHeapSize,
-                usedJSHeapSize: performance.memory?.usedJSHeapSize
-            }
+                usedJSHeapSize: performance.memory?.usedJSHeapSize,
+            },
         });
     }
 
     startSilenceDetection() {
-         // Set up audio context and processing as before
-         this.audioContext = new AudioContext();
+        // Set up audio context and processing as before
+        this.audioContext = new AudioContext();
 
-         this.audioSources = this.audioTracks.map(track => {
-             const mediaStream = new MediaStream([track]);
-             return this.audioContext.createMediaStreamSource(mediaStream);
-         });
-         
-         // Create a destination node
-         const destination = this.audioContext.createMediaStreamDestination();
- 
-         // Connect all sources to the destination
-         this.audioSources.forEach(source => {
-             source.connect(destination);
-         });
- 
-         // Create analyzer and connect it to the destination
-         this.analyser = this.audioContext.createAnalyser();
-         this.analyser.fftSize = 256;
-         const bufferLength = this.analyser.frequencyBinCount;
-         this.audioDataArray = new Uint8Array(bufferLength);
- 
-         // Create a source from the destination's stream and connect it to the analyzer
-         const mixedSource = this.audioContext.createMediaStreamSource(destination.stream);
-         mixedSource.connect(this.analyser);
- 
-         this.mixedAudioTrack = destination.stream.getAudioTracks()[0];
+        this.audioSources = this.audioTracks.map(track => {
+            const mediaStream = new MediaStream([track]);
+            return this.audioContext.createMediaStreamSource(mediaStream);
+        });
+
+        // Create a destination node
+        const destination = this.audioContext.createMediaStreamDestination();
+
+        // Connect all sources to the destination
+        this.audioSources.forEach(source => {
+            source.connect(destination);
+        });
+
+        // Create analyzer and connect it to the destination
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.fftSize = 256;
+        const bufferLength = this.analyser.frequencyBinCount;
+        this.audioDataArray = new Uint8Array(bufferLength);
+
+        // Create a source from the destination's stream and connect it to the analyzer
+        const mixedSource = this.audioContext.createMediaStreamSource(destination.stream);
+        mixedSource.connect(this.analyser);
+
+        this.mixedAudioTrack = destination.stream.getAudioTracks()[0];
 
         // Clear any existing interval
         if (this.silenceCheckInterval) {
@@ -89,7 +89,7 @@ export default class StyleManager {
         if (this.memoryUsageCheckInterval) {
             clearInterval(this.memoryUsageCheckInterval);
         }
-                
+
         // Check for audio activity every second
         this.silenceCheckInterval = setInterval(() => {
             this.checkAudioActivity();
@@ -100,15 +100,12 @@ export default class StyleManager {
             this.checkMemoryUsage();
         }, 60000);
     }
-    
 
     stop() {
         this.toggleCaptureCanvasVisibility();
     }
 
     start() {
-        
-
         this.startSilenceDetection();
 
         console.log('Started StyleManager');
@@ -136,20 +133,20 @@ export default class StyleManager {
                     // use getclientrects to get the width and height of the container and the canvas
                     const containerRect = captureCanvasElements.captureCanvasContainerElement.getBoundingClientRect();
                     const canvasRect = captureCanvasElements.captureCanvasCanvasElement.getBoundingClientRect();
-                    
+
                     // Set canvas dimensions to match container
                     captureCanvasElements.captureCanvasCanvasElement.width = containerRect.width;
                     captureCanvasElements.captureCanvasCanvasElement.height = containerRect.height;
-                    
-                    const ctx = captureCanvasElements.captureCanvasCanvasElement.getContext("2d");
-                    
+
+                    const ctx = captureCanvasElements.captureCanvasCanvasElement.getContext('2d');
+
                     // Calculate dimensions to maintain aspect ratio (objectFit: 'contain')
                     const videoElement = captureCanvasElements.captureCanvasVideoElement;
                     const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
                     const containerAspect = containerRect.width / containerRect.height;
-                    
+
                     let drawWidth, drawHeight, drawX, drawY;
-                    
+
                     if (videoAspect > containerAspect) {
                         // Video is wider - fit to width
                         drawWidth = containerRect.width;
@@ -163,23 +160,22 @@ export default class StyleManager {
                         drawX = (containerRect.width - drawWidth) / 2;
                         drawY = 0;
                     }
-                    
+
                     // Clear canvas and draw with proper dimensions
                     ctx.fillStyle = 'black';
                     ctx.fillRect(0, 0, containerRect.width, containerRect.height);
                     ctx.drawImage(videoElement, drawX, drawY, drawWidth, drawHeight);
-                    
+
                     captureCanvasElements.captureCanvasCanvasElement.style.display = '';
                 }
                 captureCanvasElements.captureCanvasVideoElement.style.display = 'none';
-            }
-            else {
+            } else {
                 if (captureCanvasElements.captureCanvasVideoElement.style.display !== '') {
                     captureCanvasElements.captureCanvasCanvasElement.style.display = 'none';
-               }
+                }
                 captureCanvasElements.captureCanvasVideoElement.style.display = '';
             }
-        });            
+        });
     }
 
     handleKeyDown(event) {
@@ -199,8 +195,7 @@ export default class StyleManager {
                 this.hideAllNonCaptureCanvasElements();
                 this.captureCanvasVisible = true;
                 console.log('Capture canvas shown');
-            }
-            catch (error) {
+            } catch (error) {
                 console.error('Error showing capture canvas', error);
             }
         }
@@ -218,7 +213,6 @@ export default class StyleManager {
                 captureCanvasContainerElement.style.outline = 'none';
                 captureCanvasContainerElement.style.boxShadow = 'none';
                 captureCanvasContainerElement.style.background = 'none';
-                
 
                 let captureCanvasVideoElement = document.createElement('video');
                 captureCanvasVideoElement.srcObject = element.srcObject;
@@ -245,8 +239,8 @@ export default class StyleManager {
                 captureCanvasLabelElement.style.left = '5px';
                 captureCanvasLabelElement.style.zIndex = '10'; // Add this line to ensure label is above other elements
                 captureCanvasLabelElement.textContent = label;
-                captureCanvasContainerElement.appendChild(captureCanvasLabelElement);    
-                
+                captureCanvasContainerElement.appendChild(captureCanvasLabelElement);
+
                 let captureCanvasCanvasElement = document.createElement('canvas');
                 captureCanvasCanvasElement.style.width = '100%';
                 captureCanvasCanvasElement.style.height = '100%';
@@ -254,7 +248,7 @@ export default class StyleManager {
                 captureCanvasCanvasElement.style.top = '0';
                 captureCanvasCanvasElement.style.left = '0';
                 captureCanvasCanvasElement.style.border = 'none';
-                captureCanvasCanvasElement.style.display = 'none';                
+                captureCanvasCanvasElement.style.display = 'none';
                 captureCanvasContainerElement.appendChild(captureCanvasCanvasElement);
 
                 this.captureCanvas.appendChild(captureCanvasContainerElement);
@@ -262,8 +256,8 @@ export default class StyleManager {
                     captureCanvasVideoElement,
                     captureCanvasLabelElement,
                     captureCanvasContainerElement,
-                    captureCanvasCanvasElement
-                }
+                    captureCanvasCanvasElement,
+                };
                 this.videoElementToCaptureCanvasElements.set(element, captureCanvasElements);
             }
 
@@ -284,11 +278,11 @@ export default class StyleManager {
                 setTimeout(() => {
                     this.captureCanvas.removeChild(captureCanvasElements.captureCanvasContainerElement);
                     this.videoElementToCaptureCanvasElements.delete(videoElement);
-                }, 16);                
+                }, 16);
             }
         });
     }
-    
+
     addVideoTrack(trackEvent) {
         const firstStreamId = trackEvent.streams[0]?.id;
         const trackId = trackEvent.track?.id;
@@ -340,7 +334,7 @@ export default class StyleManager {
         document.head.appendChild(style);
         this.currentStyleElement = style;
     }
-    
+
     showAllNonCaptureCanvasElementsAndHideCaptureCanvas() {
         if (this.currentStyleElement) {
             document.head.removeChild(this.currentStyleElement);
@@ -353,16 +347,23 @@ export default class StyleManager {
     getActiveSpeakerElementsWithInfo(mainElement) {
         const activeSpeakerElements = mainElement.querySelectorAll('div.tC2Wod.kssMZb');
 
-        return Array.from(activeSpeakerElements).map(element => {
-            const participantElement = element.closest('[data-participant-id]');
-            const participantId = participantElement ? participantElement.getAttribute('data-participant-id') : null;
-            
-            return {
-                element: element,
-                bounding_rect: element.getBoundingClientRect(),
-                participant_id: participantId
-            };
-        }).filter(element => element.bounding_rect.width > 0 && element.bounding_rect.height > 0 && element.participant_id);
+        return Array.from(activeSpeakerElements)
+            .map(element => {
+                const participantElement = element.closest('[data-participant-id]');
+                const participantId = participantElement
+                    ? participantElement.getAttribute('data-participant-id')
+                    : null;
+
+                return {
+                    element: element,
+                    bounding_rect: element.getBoundingClientRect(),
+                    participant_id: participantId,
+                };
+            })
+            .filter(
+                element =>
+                    element.bounding_rect.width > 0 && element.bounding_rect.height > 0 && element.participant_id,
+            );
     }
 
     getSSRCFromVideoElement(videoElement) {
@@ -372,39 +373,50 @@ export default class StyleManager {
 
     getVideoElementsWithInfo(mainElement, activeSpeakerElementsWithInfo) {
         const videoElements = mainElement.querySelectorAll('video');
-        const results = Array.from(videoElements).map(video => {
-            // Get the parent element to extract SSRC
-            const containerElement = video.closest('.LBDzPb');
-            const bounding_rect = video.getBoundingClientRect();
-            const container_bounding_rect = containerElement.getBoundingClientRect();
-            const clip_rect = {
-                top: container_bounding_rect.top - bounding_rect.top,
-                left: container_bounding_rect.left - bounding_rect.left,
-                right: container_bounding_rect.right - bounding_rect.top,
-                bottom: container_bounding_rect.bottom - bounding_rect.left,
-                width: container_bounding_rect.width,
-                height: container_bounding_rect.height,
-            }
-            const ssrc = this.getSSRCFromVideoElement(video);
-            const user = window.userManager.getUserByStreamId(ssrc);
-            return {
-                element: video,
-                bounding_rect: bounding_rect,
-                container_bounding_rect: container_bounding_rect,
-                clip_rect: clip_rect,
-                ssrc: ssrc,
-                user: user,
-                is_screen_share: Boolean(user?.parentDeviceId),
-                is_active_speaker: activeSpeakerElementsWithInfo?.[0]?.participant_id === user?.deviceId,
-            };
-        }).filter(video => video.ssrc && video.user && !video.paused && video.bounding_rect.width > 0 && video.bounding_rect.height > 0);
+        const results = Array.from(videoElements)
+            .map(video => {
+                // Get the parent element to extract SSRC
+                const containerElement = video.closest('.LBDzPb');
+                const bounding_rect = video.getBoundingClientRect();
+                const container_bounding_rect = containerElement.getBoundingClientRect();
+                const clip_rect = {
+                    top: container_bounding_rect.top - bounding_rect.top,
+                    left: container_bounding_rect.left - bounding_rect.left,
+                    right: container_bounding_rect.right - bounding_rect.top,
+                    bottom: container_bounding_rect.bottom - bounding_rect.left,
+                    width: container_bounding_rect.width,
+                    height: container_bounding_rect.height,
+                };
+                const ssrc = this.getSSRCFromVideoElement(video);
+                const user = window.userManager.getUserByStreamId(ssrc);
+                return {
+                    element: video,
+                    bounding_rect: bounding_rect,
+                    container_bounding_rect: container_bounding_rect,
+                    clip_rect: clip_rect,
+                    ssrc: ssrc,
+                    user: user,
+                    is_screen_share: Boolean(user?.parentDeviceId),
+                    is_active_speaker: activeSpeakerElementsWithInfo?.[0]?.participant_id === user?.deviceId,
+                };
+            })
+            .filter(
+                video =>
+                    video.ssrc &&
+                    video.user &&
+                    !video.paused &&
+                    video.bounding_rect.width > 0 &&
+                    video.bounding_rect.height > 0,
+            );
         const largestContainerBoundingRectArea = results.reduce((max, video) => {
             return Math.max(max, video.container_bounding_rect.width * video.container_bounding_rect.height);
         }, 0);
         return results.map(video => {
             return {
                 ...video,
-                is_largest: video.container_bounding_rect.width * video.container_bounding_rect.height === largestContainerBoundingRectArea,
+                is_largest:
+                    video.container_bounding_rect.width * video.container_bounding_rect.height ===
+                    largestContainerBoundingRectArea,
             };
         });
     }
@@ -424,29 +436,28 @@ export default class StyleManager {
                     ssrc: screenShareVideo.ssrc,
                 });
                 const activeSpeakerVideo = videoElementsWithInfo.find(video => video.is_active_speaker);
-                if (activeSpeakerVideo) {                    
+                if (activeSpeakerVideo) {
                     // Calculate position in upper right corner of screen share
                     const x = screenShareVideo.bounding_rect.right - activeSpeakerVideo.bounding_rect.width;
                     const y = screenShareVideo.bounding_rect.top;
-                    
+
                     layoutElements.push({
                         element: activeSpeakerVideo.element,
                         dst_rect: {
                             left: x,
                             top: y,
                             width: activeSpeakerVideo.bounding_rect.width,
-                            height: activeSpeakerVideo.bounding_rect.height
+                            height: activeSpeakerVideo.bounding_rect.height,
                         },
                         label: activeSpeakerVideo.user?.fullName || activeSpeakerVideo.user?.displayName,
                         ssrc: activeSpeakerVideo.ssrc,
                     });
                 }
-            }
-            else
-            {
-                const mainParticipantVideo = videoElementsWithInfo.find(video => video.is_largest) || videoElementsWithInfo[0];
+            } else {
+                const mainParticipantVideo =
+                    videoElementsWithInfo.find(video => video.is_largest) || videoElementsWithInfo[0];
                 this.lastMainParticipantVideoSsrc = mainParticipantVideo?.ssrc;
-                if (mainParticipantVideo) {                   
+                if (mainParticipantVideo) {
                     layoutElements.push({
                         element: mainParticipantVideo.element,
                         dst_rect: mainParticipantVideo.bounding_rect,
@@ -478,7 +489,7 @@ export default class StyleManager {
             const cellHeight = 1080 / numCols;
 
             const ssrcToVideoElement = new Map(videoElementsFiltered.map(video => [video.ssrc, video]));
-                       
+
             let galleryLayoutElements = [];
             this.ssrcsOrder.forEach((ssrc, index) => {
                 const video = ssrcToVideoElement.get(ssrc);
@@ -491,9 +502,9 @@ export default class StyleManager {
                 const videoHeight = video.element.videoHeight;
                 const videoAspect = videoWidth / videoHeight;
                 const cellAspect = (cellWidth - 10) / (cellHeight - 10);
-                
+
                 let cropX, cropY, cropWidth, cropHeight;
-                
+
                 // Determine crop dimensions to match cell aspect ratio
                 if (videoAspect > cellAspect) {
                     // Video is wider than cell - crop width
@@ -514,13 +525,13 @@ export default class StyleManager {
                         left: cropX,
                         top: cropY,
                         width: cropWidth,
-                        height: cropHeight
+                        height: cropHeight,
                     },
                     dst_rect: {
                         left: (index % numCols) * cellWidth + 5,
                         top: Math.floor(index / numCols) * cellHeight + 5,
                         width: cellWidth - 10,
-                        height: cellHeight - 10
+                        height: cellHeight - 10,
                     },
                     label: video.user?.fullName || video.user?.displayName,
                     videoWidth: videoWidth,
@@ -598,7 +609,7 @@ export default class StyleManager {
                 top: offsetY + relativeY * scaledHeight,
                 width: relativeWidth * scaledWidth,
                 height: relativeHeight * scaledHeight,
-            }
+            };
 
             return {
                 ...layoutElement,

@@ -112,20 +112,25 @@ const handleCollectionEvent = event => {
 
     const collectionEvent = messageDecoders['CollectionEvent'](decodedData);
 
-    const deviceOutputInfoList = collectionEvent.body.userInfoListWrapperAndChatWrapperWrapper?.deviceInfoWrapper?.deviceOutputInfoList;
+    const deviceOutputInfoList =
+        collectionEvent.body.userInfoListWrapperAndChatWrapperWrapper?.deviceInfoWrapper?.deviceOutputInfoList;
     if (deviceOutputInfoList) {
         console.log(`\x1b[34m INFO: deviceOutputInfoList`, deviceOutputInfoList);
         userManager.updateDeviceOutputs(deviceOutputInfoList);
     }
 
-    const chatMessageWrapper = collectionEvent.body.userInfoListWrapperAndChatWrapperWrapper?.userInfoListWrapperAndChatWrapper?.chatMessageWrapper;
+    const chatMessageWrapper =
+        collectionEvent.body.userInfoListWrapperAndChatWrapperWrapper?.userInfoListWrapperAndChatWrapper
+            ?.chatMessageWrapper;
     if (chatMessageWrapper) {
         console.log(`\x1b[34m INFO: chatMessageWrapper`, chatMessageWrapper);
     }
 
     //console.log('collectionEvent.body.userInfoListWrapperAndChatWrapperWrapper', JSON.stringify(collectionEvent.body.userInfoListWrapperAndChatWrapperWrapper));
 
-    const userInfoList = collectionEvent.body.userInfoListWrapperAndChatWrapperWrapper?.userInfoListWrapperAndChatWrapper?.userInfoListWrapper?.userInfoList || [];
+    const userInfoList =
+        collectionEvent.body.userInfoListWrapperAndChatWrapperWrapper?.userInfoListWrapperAndChatWrapper
+            ?.userInfoListWrapper?.userInfoList || [];
     // This event is triggered when a single user joins (or leaves) the meeting
     // generally this array only contains a single user
     // we can't tell whether the event is a join or leave event, so we'll assume it's a join
@@ -146,7 +151,6 @@ const handleCaptionEvent = event => {
     const caption = captionWrapper.caption;
     captionManager.singleCaptionSynced(caption);
 };
-
 
 /** Launch the interceptor */
 
@@ -298,9 +302,9 @@ const communicationBridge = new CommunicationBridge();
 
 const port = chrome.runtime.connect({ name: 'script' });
 
-port.onMessage.addListener((message) => {
+port.onMessage.addListener(message => {
     console.log('Received message from background:', message);
-    
+
     if (message.type === MessageType.START_CAPTURING) {
         // Reset the state
         userManager.reset();
@@ -314,22 +318,24 @@ port.onMessage.addListener((message) => {
                 videoEnabled: true,
             },
         };
-        
+
         // Start intercepting audio and video
-        navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: true,
-        }).then((stream) => {
-            stream.getTracks().forEach((track) => {
-                if (track.kind === 'audio') {
-                    handleAudioTrack({ track, streams: [stream] });
-                } else if (track.kind === 'video') {
-                    handleVideoTrack({ track, streams: [stream] });
-                }
+        navigator.mediaDevices
+            .getUserMedia({
+                audio: true,
+                video: true,
+            })
+            .then(stream => {
+                stream.getTracks().forEach(track => {
+                    if (track.kind === 'audio') {
+                        handleAudioTrack({ track, streams: [stream] });
+                    } else if (track.kind === 'video') {
+                        handleVideoTrack({ track, streams: [stream] });
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error getting media stream:', error);
             });
-        }).catch((error) => {
-            console.error('Error getting media stream:', error);
-        });
     }
 });
-

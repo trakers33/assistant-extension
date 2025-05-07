@@ -1,8 +1,8 @@
 import type { BUILD_COMPLETE, DO_UPDATE, DONE_UPDATE } from './consts.js';
 
 type UpdateRequestMessage = {
-  type: typeof DO_UPDATE;
-  id: string;
+    type: typeof DO_UPDATE;
+    id: string;
 };
 
 type UpdateCompleteMessage = { type: typeof DONE_UPDATE };
@@ -13,8 +13,8 @@ export type SerializedMessage = string;
 export type WebSocketMessage = UpdateCompleteMessage | UpdateRequestMessage | BuildCompletionMessage;
 
 export type PluginConfig = {
-  onStart?: () => void;
-  reload?: boolean;
-  refresh?: boolean;
-  id?: string;
+    onStart?: () => void;
+    reload?: boolean;
+    refresh?: boolean;
+    id?: string;
 };

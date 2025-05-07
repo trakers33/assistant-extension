@@ -4,6 +4,7 @@ export enum MessageDestination {
     sidePanel = 'sidePanel',
     inline = 'inline',
     background = 'background',
+    option = 'option',
     script = 'script',
 }
 
@@ -11,6 +12,8 @@ export enum MessageSource {
     sidePanel = 'sidePanel',
     inline = 'inline',
     background = 'background',
+    option = 'option',
+    script = 'script',
 }
 
 export enum MessageType {
@@ -27,6 +30,7 @@ export enum MessageType {
     START_CAPTURING = 'START_CAPTURING',
     MEETING_READY = 'MEETING_READY',
     DEVICE_OUTPUTS_UPDATE = 'DEVICE_OUTPUTS_UPDATE',
+    REQUEST_GENERATE_SUMMARY = 'REQUEST_GENERATE_SUMMARY',
 }
 
 export interface RuntimeMessage {

@@ -2,7 +2,7 @@
     "extends": "@extension/tsconfig/base",
     "compilerOptions": {
         "baseUrl": ".",
-        "paths": {  
+        "paths": {
             "@src/*": ["src/*"]
         },
         "types": ["chrome", "node", "./global.d.ts"]

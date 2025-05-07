@@ -55,7 +55,7 @@ class AudioCaptureService {
             };
 
             this.ws.onmessage = (event: MessageEvent) => {
-                console.log('WebSocket message received:', event.data);
+                //console.log('WebSocket message received:', event.data);
                 try {
                     const transcription = JSON.parse(event.data);
                     this.sendTranscription(transcription);

@@ -5,8 +5,8 @@ export * from './lib/const.js';
 export * from './lib/index.js';
 
 const env = {
-  ...baseEnv,
-  ...dynamicEnvValues,
+    ...baseEnv,
+    ...dynamicEnvValues,
 } as IEnv;
 
 export default env;

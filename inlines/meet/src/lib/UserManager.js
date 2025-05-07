@@ -89,7 +89,9 @@ export default class UserManager {
         7: 'removed_from_meeting',
     };
     getCurrentUsersInMeeting() {
-        return Array.from(this.currentUsersMap.values()).filter(user => this.USER_STATUS_MAP[user.status] === 'in_meeting');
+        return Array.from(this.currentUsersMap.values()).filter(
+            user => this.USER_STATUS_MAP[user.status] === 'in_meeting',
+        );
     }
 
     getCurrentUsersInMeetingWhoAreScreenSharing() {
@@ -106,7 +108,6 @@ export default class UserManager {
 
     newUsersListSynced(newUsersListRaw) {
         const newUsersList = newUsersListRaw.map(user => {
-
             return {
                 ...user,
                 humanized_status: user.status <= 3 ? this.USER_STATUS_MAP[1] : this.USER_STATUS_MAP[6],

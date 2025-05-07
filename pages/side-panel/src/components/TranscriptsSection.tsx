@@ -5,8 +5,11 @@ import { Switch } from '@headlessui/react';
 import { useStorage } from '@extension/shared';
 import { optionsStorage, setAutoCaptions } from '@extension/storage';
 import moment from 'moment';
+import { useTheme } from '@extension/ui/lib/components/ThemeProvider';
 
-export const TranscriptsSection = ({ captions, isLight, onDownload }: TranscriptsSectionProps & { onDownload: () => void }) => {
+export const TranscriptsSection = ({ captions, onDownload }: TranscriptsSectionProps & { onDownload: () => void }) => {
+    const { theme } = useTheme();
+    const isLight = theme === 'light';
     const containerRef = useRef<HTMLDivElement>(null);
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
     const options = useStorage(optionsStorage);
@@ -83,9 +86,7 @@ export const TranscriptsSection = ({ captions, isLight, onDownload }: Transcript
 
     return (
         <div
-            className={`transcripts px-4 py-4 overflow-y-auto ${
-                isLight ? 'bg-gray-50' : 'bg-gray-900'
-            }`}
+            className={`transcripts px-4 py-4 overflow-y-auto ${isLight ? 'bg-gray-50' : 'bg-gray-900'}`}
             role="tabpanel"
             id="transcripts-panel"
             ref={containerRef}
@@ -104,18 +105,14 @@ export const TranscriptsSection = ({ captions, isLight, onDownload }: Transcript
                             } inline-block h-3 w-3 transform rounded-full bg-white transition-transform`}
                         />
                     </Switch>
-                    <span className={`text-sm ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>
-                        Auto-captions
-                    </span>
+                    <span className={`text-sm ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>Auto-captions</span>
                 </div>
                 {captions.length > 0 && (
                     <button
                         onClick={onDownload}
                         title="Download Transcript"
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors duration-200 ${
-                            isLight
-                                ? 'hover:bg-gray-200 text-gray-700'
-                                : 'hover:bg-gray-700 text-gray-300'
+                            isLight ? 'hover:bg-gray-200 text-gray-700' : 'hover:bg-gray-700 text-gray-300'
                         }`}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -143,20 +140,16 @@ export const TranscriptsSection = ({ captions, isLight, onDownload }: Transcript
 
             <div className="space-y-4">
                 {groupedCaptions.map((group, index) => (
-                    <div 
-                        key={index} 
+                    <div
+                        key={index}
                         className={`p-3 rounded-lg shadow-sm border ${
-                            isLight 
-                                ? 'bg-white border-gray-200' 
-                                : 'bg-gray-800 border-gray-700'
-                        }`}
-                    >
+                            isLight ? 'bg-white border-gray-200' : 'bg-gray-800 border-gray-700'
+                        }`}>
                         <div className="flex items-start gap-2">
-                            <div 
+                            <div
                                 className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${
                                     isLight ? 'bg-blue-100' : 'bg-blue-900'
-                                }`}
-                            >
+                                }`}>
                                 {group.speaker?.profilePicture ? (
                                     <img
                                         src={group.speaker.profilePicture}
@@ -164,33 +157,29 @@ export const TranscriptsSection = ({ captions, isLight, onDownload }: Transcript
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <span className={`text-sm font-medium ${
-                                        isLight ? 'text-blue-600' : 'text-blue-300'
-                                    }`}>
+                                    <span
+                                        className={`text-sm font-medium ${
+                                            isLight ? 'text-blue-600' : 'text-blue-300'
+                                        }`}>
                                         {group.speaker?.displayName?.[0] || '?'}
                                     </span>
                                 )}
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className={`font-medium ${
-                                        isLight ? 'text-gray-900' : 'text-white'
-                                    }`}>
+                                    <span className={`font-medium ${isLight ? 'text-gray-900' : 'text-white'}`}>
                                         {group.speaker?.displayName || 'Unknown Speaker'}
                                     </span>
-                                    <span className={`text-xs ${
-                                        isLight ? 'text-gray-500' : 'text-gray-400'
-                                    }`}>
+                                    <span className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
                                         {formatTimeRange(group.firstTimestamp, group.lastTimestamp)}
                                     </span>
                                 </div>
-                                <div className={`space-y-1 ${
-                                    isLight ? 'text-gray-700' : 'text-gray-300'
-                                }`}>
+                                <div className={`space-y-1 ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>
                                     <p>
                                         {group.messages.map((message, msgIndex) => (
                                             <span key={msgIndex}>
-                                                {msgIndex > 0 ? ' ' : ''}{message.text}
+                                                {msgIndex > 0 ? ' ' : ''}
+                                                {message.text}
                                             </span>
                                         ))}
                                     </p>

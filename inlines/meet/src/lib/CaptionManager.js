@@ -21,7 +21,7 @@ export default class CaptionManager {
             speaker: window.userManager?.getUserByDeviceId(caption.deviceId) || null,
             timestamp: Date.now(),
             captionHeader: {
-                timestamp: caption?.captionHeader?.timestamp || null
+                timestamp: caption?.captionHeader?.timestamp || null,
             },
         };
 
@@ -32,7 +32,7 @@ export default class CaptionManager {
         // Update last processed timestamp
         this.lastProcessedTimestamp = Date.now();
 
-        console.log(`\x1b[34m INFO: CaptionManager -> singleCaptionSynced`, enhancedCaption);
+        //console.log(`\x1b[34m INFO: CaptionManager -> singleCaptionSynced`, enhancedCaption);
 
         // Send caption update to background script
         document.documentElement.dispatchEvent(

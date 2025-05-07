@@ -3,14 +3,62 @@ import { createStorage, StorageEnum } from '../base/index.js';
 
 export type Theme = 'light' | 'dark';
 
+export interface MeetingProfile {
+    id: string;
+    name: string;
+    userName: string;
+    objective: string;
+    structure: string;
+    tone?: string;
+    language?: string;
+    audience?: string;
+}
+
 export interface Options {
     autoCaptions: boolean;
     theme: Theme;
+    profiles?: MeetingProfile[];
+    openAIApiKey?: string;
 }
+
+const defaultProfiles: MeetingProfile[] = [
+    {
+        id: 'default',
+        name: 'Default',
+        userName: 'User',
+        objective: 'Provide a general summary of the call.',
+        structure: 'Introduction, Main Points, Conclusion',
+        tone: 'neutral',
+        language: 'English',
+        audience: 'General',
+    },
+    {
+        id: 'sales',
+        name: 'Summary - Sales Oriented',
+        userName: 'Sales Rep',
+        objective: 'Summarize the call with a focus on sales opportunities and client needs.',
+        structure: 'Client Needs, Product Fit, Next Steps',
+        tone: 'persuasive',
+        language: 'English',
+        audience: 'Sales Team',
+    },
+    {
+        id: 'engineer',
+        name: 'Summary - Software Engineer Oriented',
+        userName: 'Engineer',
+        objective: 'Summarize the call with a focus on technical details and action items.',
+        structure: 'Technical Discussion, Issues, Action Items',
+        tone: 'concise',
+        language: 'English',
+        audience: 'Engineering Team',
+    },
+];
 
 const defaultOptions: Options = {
     autoCaptions: true,
-    theme: 'light'
+    theme: 'light',
+    profiles: defaultProfiles,
+    openAIApiKey: '',
 };
 
 export const optionsStorage = createStorage<Options>('options', defaultOptions, {
@@ -27,25 +75,18 @@ export const getAutoCaptions = async (): Promise<boolean> => {
 export const setAutoCaptions = async (value: boolean): Promise<void> => {
     await optionsStorage.set(current => ({
         ...current,
-        autoCaptions: value
+        autoCaptions: value,
     }));
 };
 
-export const getTheme = async (): Promise<Theme> => {
+export const getProfiles = async (): Promise<MeetingProfile[]> => {
     const options = await optionsStorage.get();
-    return options.theme;
+    return options.profiles || defaultProfiles;
 };
 
-export const setTheme = async (theme: Theme): Promise<void> => {
+export const setProfiles = async (profiles: MeetingProfile[]): Promise<void> => {
     await optionsStorage.set(current => ({
         ...current,
-        theme
+        profiles,
     }));
 };
-
-export const toggleTheme = async (): Promise<void> => {
-    await optionsStorage.set(current => ({
-        ...current,
-        theme: current.theme === 'light' ? 'dark' : 'light'
-    }));
-}; 

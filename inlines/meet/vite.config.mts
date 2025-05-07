@@ -5,19 +5,19 @@ const rootDir = resolve(import.meta.dirname);
 const srcDir = resolve(rootDir, 'src');
 
 export default withPageConfig({
-  resolve: {
-    alias: {
-      '@src': srcDir,
+    resolve: {
+        alias: {
+            '@src': srcDir,
+        },
     },
-  },
-  publicDir: resolve(rootDir, 'public'),
-  build: {
-    lib: {
-      name: 'ContentRuntimeScript',
-      fileName: 'inline.googlemeet',
-      formats: ['iife'],
-      entry: resolve(srcDir, 'index.js'),
+    publicDir: resolve(rootDir, 'public'),
+    build: {
+        lib: {
+            name: 'ContentRuntimeScript',
+            fileName: 'inline.googlemeet',
+            formats: ['iife'],
+            entry: resolve(srcDir, 'index.js'),
+        },
+        outDir: resolve(rootDir, '..', '..', 'dist', 'inlinescripts'),
     },
-    outDir: resolve(rootDir, '..', '..', 'dist', 'inlinescripts'),
-  },
 });

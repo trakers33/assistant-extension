@@ -2,8 +2,9 @@
 import { RuntimeMessage, MessageDestination, MessageSource, MessageType } from '@extension/shared/lib/types/runtime';
 import { CaptionData, Participant } from '@extension/shared/lib/types/meeting';
 import { runtime, storage } from 'webextension-polyfill';
-import {  transcriptStorage, addTranscript } from '@extension/storage';
+import { transcriptStorage, addTranscript } from '@extension/storage';
 import { getWebSocketConfig, WebSocketConfig } from '@extension/storage/lib/ws-config';
+import { getProfiles, optionsStorage } from '@extension/storage/lib/impl/optionsStorage';
 
 const keepAlive = () => setInterval(chrome.runtime.getPlatformInfo, 20e3);
 chrome.runtime.onStartup.addListener(keepAlive);
@@ -19,6 +20,7 @@ const insightsMap = new Map<string, { insights: any[]; currentInsight: number; i
 let inlinePorts = new Set<chrome.runtime.Port>();
 let sidePanelPorts = new Set<chrome.runtime.Port>();
 let scriptPorts = new Set<chrome.runtime.Port>();
+let optionPorts = new Set<chrome.runtime.Port>();
 
 // WebSocket connection state
 let wsConnection: WebSocket | null = null;
@@ -27,9 +29,9 @@ let wsReconnectTimeout: NodeJS.Timeout | null = null;
 // Helper to get or generate a persistent random user_id for the extension user
 function generateUUIDv4() {
     // https://stackoverflow.com/a/2117523/508355
-    return 'user-xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'user-xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
     });
 }
@@ -66,7 +68,7 @@ const initWebSocket = async () => {
     // Use the most recent meetingId in state, or fallback
     const meetingIds = Array.from(participantsMap.keys());
     const meetingId = meetingIds.length > 0 ? meetingIds[0] : 'default-conv';
-    const user_id = 'default_user_id';//await getOrCreateUserId();
+    const user_id = 'default_user_id'; //await getOrCreateUserId();
     const conversation_id = meetingId || 'default-conv';
     let endpoint = config.endpoint;
     if (!endpoint.endsWith('/')) endpoint += '/';
@@ -83,17 +85,17 @@ const initWebSocket = async () => {
             }
         };
 
-        wsConnection.onmessage = (event) => {
+        wsConnection.onmessage = event => {
             try {
                 const message = JSON.parse(event.data);
-                console.log('WebSocket message received', message);
+                //console.log('WebSocket message received', message);
                 handleWebSocketMessage(message);
             } catch (error) {
                 console.error('Error parsing WebSocket message:', error);
             }
         };
 
-        wsConnection.onerror = (error) => {
+        wsConnection.onerror = error => {
             console.error('WebSocket error:', error);
         };
 
@@ -113,30 +115,25 @@ const handleWebSocketMessage = (message: any) => {
     switch (message.type) {
         case 'insight':
             // Update insights
-            const meetingId = message.meetingId || 'default';
-            const currentInsights = insightsMap.get(meetingId) || { insights: [], currentInsight: 0, isInsightsActive: false };
+            const meetingId = message.conversation_id || 'default';
+            const currentInsights = insightsMap.get(meetingId) || {
+                insights: [],
+                currentInsight: 0,
+                isInsightsActive: false,
+            };
             currentInsights.insights = [...currentInsights.insights, message.data];
             insightsMap.set(meetingId, currentInsights);
-            
+            console.log('insightsMap', insightsMap);
+
             // Notify side panel about new insight
             const insightMessage: RuntimeMessage = {
                 type: MessageType.INSIGHTS_UPDATE,
                 to: MessageDestination.sidePanel,
                 meetingId,
-                data: currentInsights,
+                data: message,
             };
             sidePanelPorts.forEach(port => {
-                port.postMessage({
-                    type: MessageType.MEETING_INFO,
-                    to: MessageDestination.sidePanel,
-                    meetingId,
-                    data: {
-                        participants: participantsMap.get(meetingId) || [],
-                        captions: captionsMap.get(meetingId) || [],
-                        insights: insightsMap.get(meetingId) || { insights: [], currentInsight: 0, isInsightsActive: false },
-                        ...(meetingInfoMap.get(meetingId) || { title: '', url: '' }),
-                    },
-                });
+                port.postMessage(insightMessage);
             });
             break;
         // Add more message type handlers as needed
@@ -145,20 +142,21 @@ const handleWebSocketMessage = (message: any) => {
 
 // Function to stream captions to WebSocket
 const streamCaptions = async (caption: CaptionData, meetingId: string) => {
-    console.log('streamCaptions', wsConnection);
+    console.log('streamCaptions', wsConnection?.readyState === WebSocket.OPEN);
     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
         //const user_id = await getOrCreateUserId();
         // Use meetingId as conversation_id
         //const conversation_id = meetingId;
         // Compose the message in the required format
-        console.log('streamCaptions', caption);
-        const payload = {
+        //console.log('streamCaptions', caption);
+        /* const payload = {
             text: caption.text,
-            speaker: caption.deviceId || caption.speakerName //|| user_id,
+            speaker: caption.deviceId || caption.speakerName, //|| user_id,
             //user_id,
             //conversation_id,
-        };
-        //wsConnection.send(JSON.stringify(payload));
+        }; */
+        //console.log('streamCaptions', payload);
+        wsConnection.send(JSON.stringify(caption));
     }
 };
 
@@ -183,7 +181,7 @@ const updateState = (message: RuntimeMessage) => {
             if (message.data) {
                 const { newUsers, removedUsers, updatedUsers } = message.data;
                 const currentParticipants = participantsMap.get(meetingId) || [];
-                
+
                 // Update participants
                 let updatedParticipants = currentParticipants
                     .filter(p => !removedUsers.some((ru: any) => ru.deviceId === p.deviceId))
@@ -193,7 +191,7 @@ const updateState = (message: RuntimeMessage) => {
                         );
                         return updatedUser || p;
                     });
-                
+
                 // Add new users
                 updatedParticipants = [...updatedParticipants, ...newUsers].filter(
                     (p: any, index: number, self: any[]) =>
@@ -268,7 +266,7 @@ chrome.runtime.onConnect.addListener(async (port: chrome.runtime.Port) => {
             sidePanelPorts.delete(port);
             console.error('Side panel port disconnected');
         });
-    } else if (port.name === 'script') {
+    } else if (port.name === MessageSource.script) {
         scriptPorts.add(port);
 
         // Handle messages from the script
@@ -290,6 +288,14 @@ chrome.runtime.onConnect.addListener(async (port: chrome.runtime.Port) => {
         port.onDisconnect.addListener(() => {
             scriptPorts.delete(port);
             console.log('Script port disconnected');
+        });
+    } else if (port.name === MessageSource.option) {
+        optionPorts.add(port);
+
+        // Handle disconnection
+        port.onDisconnect.addListener(() => {
+            optionPorts.delete(port);
+            console.log('Option port disconnected');
         });
     }
 });
@@ -323,51 +329,165 @@ const isStateUpdateType = (type: MessageType): boolean => {
 };
 
 // Listen for messages from content scripts
-chrome.runtime.onMessage.addListener(async (message: RuntimeMessage, sender, sendResponse) => {
-    //console.log('Background received message', message);
-    const meetingId = message?.meetingId || 'default';
-    // Update state based on message
-    if (isStateUpdateType(message.type)) {
-        updateState(message);
-    }
+chrome.runtime.onMessage.addListener((message: RuntimeMessage, sender, sendResponse) => {
+    const processMessage = async (message: RuntimeMessage, sendResponse: (response: any) => void) => {
+        //console.log('Background received message', message);
+        const meetingId = message?.meetingId || 'default';
+        // Update state based on message
+        if (isStateUpdateType(message.type)) {
+            updateState(message);
+        }
 
-    // Handle specific message types
-    switch (message.type) {
-        case MessageType.SAVE_TRANSCRIPT:
-            addTranscript(message.data)
-                .then(() => sendResponse({ success: true }))
-                .catch((error: Error) => {
-                    console.error('Error saving transcript:', error);
-                    sendResponse({ success: false, error: error.message });
-                });
-            return; // Required for async response
-        case MessageType.USERS_UPDATE:
-            // Handle users update exception
-            message.data = {
-                participants: participantsMap.get(meetingId) || [],
-            };
-            break;
-        default:
-            break;
-    }
+        // Handle specific message types
+        switch (message.type) {
+            case MessageType.SAVE_TRANSCRIPT:
+                addTranscript(message.data)
+                    .then(() => sendResponse({ success: true }))
+                    .catch((error: Error) => {
+                        console.error('Error saving transcript:', error);
+                        sendResponse({ success: false, error: error.message });
+                    });
+                return; // Required for async response
+            case MessageType.USERS_UPDATE:
+                // Handle users update exception
+                message.data = {
+                    participants: participantsMap.get(meetingId) || [],
+                };
+                break;
+            case MessageType.REQUEST_GENERATE_SUMMARY:
+                console.log('REQUEST_GENERATE_SUMMARY', message);
+                // Handle generate summary exception
+                const { captions, instruction, profile } = message.data;
+                // Fetch OpenAI key from storage
+                const options = await optionsStorage.get();
+                const openAIApiKey = options.openAIApiKey;
+                if (!openAIApiKey) {
+                    sendResponse({ error: 'No OpenAI API key set.' });
+                }
+                // Build prompt (no JSON instructions, just context)
+                const systemPrompt =
+                    `Current user is "${profile.userName}". Your objective is: ${profile.objective}\n` +
+                    `Please use the following structure: ${profile.structure}\n` +
+                    (profile.tone ? `Tone: ${profile.tone}\n` : '') +
+                    (profile.language ? `Language: ${profile.language}\n` : '') +
+                    (profile.audience ? `Audience: ${profile.audience}\n` : '') +
+                    (instruction ? `Additional instructions: ${instruction}\n` : '') +
+                    `\nFor each action item, estimate a probability (between 0 and 1) that this action item is truly required, based on the transcript.\nInclude a 'probability' field for each action item.`;
+                const userPrompt = `Here is the transcript of the meeting:\n${captions}`;
 
-    // Forward message to appropriate port
-    switch (message.to) {
-        case MessageDestination.inline:
-            console.log('Sending message to inline port', message);
-            inlinePorts.forEach(port => port.postMessage(message));
-            break;
-        case MessageDestination.sidePanel:
-            console.log('Sending message to side panel port', message);
-            sidePanelPorts.forEach(port => port.postMessage(message));
-            break;
-        case MessageDestination.script:
-            console.log('Sending message to script port', message);
-            scriptPorts.forEach(port => port.postMessage(message));
-            break;
-        default:
-            console.error('Unknown message destination', message.to);   
-    }
+                // Call OpenAI API with outputSchema (strict JSON schema)
+                try {
+                    console.log('fetching openai with outputSchema');
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${openAIApiKey}`,
+                        },
+                        body: JSON.stringify({
+                            model: 'o4-mini',
+                            messages: [
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: userPrompt },
+                            ],
+                            temperature: 1,
+                            response_format: {
+                                type: 'json_schema',
+                                json_schema: {
+                                    name: 'output_schema',
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            summary: {
+                                                type: 'string',
+                                                description: 'A markdown summary of the meeting (without action items)',
+                                            },
+                                            actionItems: {
+                                                type: 'array',
+                                                description: 'A list of action items that were defined in the meeting.',
+                                                items: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        title: { type: 'string', description: 'Action item title' },
+                                                        description: {
+                                                            type: 'string',
+                                                            description: 'Action item description',
+                                                        },
+                                                        probability: {
+                                                            type: 'number',
+                                                            description:
+                                                                'Probability (0-1) that this action item is truly required',
+                                                        },
+                                                    },
+                                                    required: ['title', 'description', 'probability'],
+                                                    additionalProperties: false,
+                                                },
+                                            },
+                                        },
+                                        required: ['summary', 'actionItems'],
+                                        additionalProperties: false,
+                                    },
+                                    strict: true,
+                                },
+                            },
+                        }),
+                    });
+                    const data = await response.json();
+                    console.log('data', data);
+                    if (data.error) {
+                        sendResponse({ error: data.error });
+                        return;
+                    } else {
+                        let summary = '';
+                        let actionItems = [];
+                        // Parse structured output from JSON response
+                        const content = data.choices?.[0]?.message?.content;
+                        if (content) {
+                            const parsed = JSON.parse(content);
+                            summary = parsed.summary || '';
+                            actionItems = parsed.actionItems || [];
+                            // Sort action items by probability descending
+                            actionItems = actionItems.sort(
+                                (a: { probability: number }, b: { probability: number }) =>
+                                    (b.probability || 0) - (a.probability || 0),
+                            );
+                        }
+                        sendResponse({ summary, actionItems });
+                    }
+                } catch (err: any) {
+                    sendResponse({ error: err.message || 'Failed to generate summary.' });
+                }
+                return;
+            default:
+                break;
+        }
+
+        // Forward message to appropriate port
+        switch (message.to) {
+            case MessageDestination.inline:
+                //console.log('Sending message to inline port', message);
+                inlinePorts.forEach(port => port.postMessage(message));
+                break;
+            case MessageDestination.sidePanel:
+                //console.log('Sending message to side panel port', message);
+                sidePanelPorts.forEach(port => port.postMessage(message));
+                break;
+            case MessageDestination.script:
+                //console.log('Sending message to script port', message);
+                scriptPorts.forEach(port => port.postMessage(message));
+                break;
+            case MessageDestination.option:
+                //console.log('Sending message to option port', message);
+                optionPorts.forEach(port => port.postMessage(message));
+                break;
+            default:
+                console.error('Unknown message destination', message.to);
+        }
+    };
+
+    processMessage(message, sendResponse);
+
+    return true;
 });
 
 export async function init() {

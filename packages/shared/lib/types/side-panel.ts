@@ -131,4 +131,4 @@ export interface ControlButtonsProps {
     windowState: WindowState;
     handleMinimize: () => Promise<void>;
     handleExpand: () => Promise<void>;
-} 
+}

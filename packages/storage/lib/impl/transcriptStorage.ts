@@ -8,9 +8,15 @@ export interface Transcript {
     captions: Array<{
         timestamp: number;
         text: string;
-        speaker?: string;
+        speaker?: {
+            displayName: string;
+        };
     }>;
     createdAt: number;
+    summary?: {
+        summary: string;
+        actionItems: { title: string; description: string }[];
+    };
 }
 
 const STORAGE_KEY = 'transcripts';
@@ -28,4 +34,4 @@ export const getTranscripts = async (): Promise<Transcript[]> => {
 
 export const clearTranscripts = async (): Promise<void> => {
     await transcriptStorage.set([]);
-}; 
+};

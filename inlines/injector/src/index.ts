@@ -21,8 +21,6 @@ interface MeetMessage {
 
 const meetHost = 'meet.google.com';
 
-
-
 // Initialize the side panel
 let sidePanelContainer: HTMLDivElement | null = null;
 let meetingId: string | null = null;
@@ -41,7 +39,6 @@ const updateMeetingReadyState = (ready: boolean) => {
     }
 };
 
-
 // Extract meeting ID from URL
 const extractMeetingId = (url: string): string | null => {
     const match = url.match(/meet\.google\.com\/([a-z]{3}-[a-z]{4}-[a-z]{3})/);
@@ -50,7 +47,7 @@ const extractMeetingId = (url: string): string | null => {
 
 const isMeetPage = (location: Location = window.location): boolean => location.host === meetHost;
 
-const createMeetingInfoMessage = ({from, to}: {from: MessageSource, to: MessageDestination}): MeetMessage => {
+const createMeetingInfoMessage = ({ from, to }: { from: MessageSource; to: MessageDestination }): MeetMessage => {
     const currentUrl = window.location.href;
     return {
         from: from,
@@ -60,7 +57,7 @@ const createMeetingInfoMessage = ({from, to}: {from: MessageSource, to: MessageD
         data: {
             title: document.title,
             url: currentUrl.split('?')[0],
-        }
+        },
     };
 };
 
@@ -78,7 +75,7 @@ function initializeRTC(): void {
         ) {
             const head = document.head || document.documentElement;
             injectScript(head, chrome.runtime.getURL('./inlinescripts/inline.googlemeet.iife.js'));
-            
+
             // Initialize communication bridge
             initializeCommunicationBridge();
         }
@@ -88,7 +85,7 @@ function initializeRTC(): void {
 function initializeCommunicationBridge(): void {
     console.log('\x1b[32m%s\x1b[0m', 'initializeCommunicationBridge');
     const port = chrome.runtime.connect({ name: 'script' });
-    
+
     // Create a message handler for the Meet application
     window.addEventListener('message', (event: MessageEvent) => {
         if (event.source === window && event.data && event.data.type === 'MEET_EXTENSION') {
@@ -104,18 +101,19 @@ function initializeCommunicationBridge(): void {
     port.onMessage.addListener((message: MeetMessage) => {
         //console.log('\x1b[32m%s\x1b[0m', 'message -> chrome.runtime.onMessage', message);
         if (message.to === 'script') {
-            
         }
     });
 }
 
 function notifyCaptionsStatus(isCaptioning: boolean): void {
-    window.dispatchEvent(new CustomEvent('meet-message', {
-        detail: {
-            type: 'CAPTIONS_STATUS',
-            data: { isCaptioning }
-        }
-    }));
+    window.dispatchEvent(
+        new CustomEvent('meet-message', {
+            detail: {
+                type: 'CAPTIONS_STATUS',
+                data: { isCaptioning },
+            },
+        }),
+    );
 }
 
 function injectScript(target: HTMLElement, src: string): void {
@@ -126,7 +124,7 @@ function injectScript(target: HTMLElement, src: string): void {
     target.prepend(script);
 }
 
-function connectInlineToBackground(): {inlinePort: chrome.runtime.Port, scriptPort: chrome.runtime.Port} {
+function connectInlineToBackground(): { inlinePort: chrome.runtime.Port; scriptPort: chrome.runtime.Port } {
     const inlinePort = chrome.runtime.connect({ name: 'inline' });
     const scriptPort = chrome.runtime.connect({ name: 'script' });
 
@@ -140,11 +138,11 @@ function connectInlineToBackground(): {inlinePort: chrome.runtime.Port, scriptPo
                     sidePanelContainer = createSidePanel();
                 }
                 toggleSidePanel(sidePanelContainer);
-            break;
+                break;
 
             case MessageType.REQUEST_MEETING_INFO:
                 chrome.runtime.sendMessage(
-                    createMeetingInfoMessage({from: MessageSource.inline, to: MessageDestination.sidePanel})
+                    createMeetingInfoMessage({ from: MessageSource.inline, to: MessageDestination.sidePanel }),
                 );
                 break;
             /* case MessageType.VIDEO_TOGGLE:
@@ -163,12 +161,14 @@ function connectInlineToBackground(): {inlinePort: chrome.runtime.Port, scriptPo
 
     scriptPort.onMessage.addListener((message: MeetMessage) => {
         console.log(`[scriptPort]${message.from} -> ${message.to}`, message);
-        window.dispatchEvent(new CustomEvent('meet-message', {
-            detail: message
-        }));
+        window.dispatchEvent(
+            new CustomEvent('meet-message', {
+                detail: message,
+            }),
+        );
     });
 
-    return {inlinePort, scriptPort};
+    return { inlinePort, scriptPort };
 }
 
 function addAssistantMessageListener(): void {
@@ -270,22 +270,23 @@ const toggleSidePanel = (container: HTMLDivElement): void => {
     if (!isVisible) {
         // Send updated meeting info
         chrome.runtime.sendMessage(
-            createMeetingInfoMessage({from: MessageSource.inline, to: MessageDestination.sidePanel})
+            createMeetingInfoMessage({ from: MessageSource.inline, to: MessageDestination.sidePanel }),
         );
     }
 };
-
 
 // Listen for storage changes to handle auto-captions toggle
 chrome.storage.onChanged.addListener(async (changes, area) => {
     if (area === 'local' && changes.options) {
         const newOptions = changes.options.newValue;
         const oldOptions = changes.options.oldValue || {};
-        
+
         // Only handle changes to autoCaptions
         if (newOptions.autoCaptions !== oldOptions.autoCaptions) {
             if (newOptions.autoCaptions) {
-                const captionsButton = document.querySelector('button[aria-label="Turn on captions"]') as HTMLButtonElement;
+                const captionsButton = document.querySelector(
+                    'button[aria-label="Turn on captions"]',
+                ) as HTMLButtonElement;
                 if (captionsButton) {
                     captionsButton.click();
                     notifyCaptionsStatus(true);
@@ -311,8 +312,8 @@ const checkCaptionsButton = async (initializeCaptions: boolean = false): Promise
                 },
             }),
         );
-        
-        if(initializeCaptions) {
+
+        if (initializeCaptions) {
             //console.log('########## 1',captionsButton);
             captionsButton.click();
             notifyCaptionsStatus(true);
@@ -328,7 +329,6 @@ const checkCaptionsButton = async (initializeCaptions: boolean = false): Promise
         setTimeout(() => checkCaptionsButton(initializeCaptions), 1000);
     }
 };
-
 
 async function init(): Promise<void> {
     meetingId = extractMeetingId(window.location.href);

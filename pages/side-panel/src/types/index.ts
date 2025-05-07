@@ -8,7 +8,7 @@ export interface Insight {
 export enum Tab {
     Transcripts = 'transcripts',
     Participants = 'participants',
-    Files = 'files',
+    Summary = 'summary',
 }
 
 export enum DisplayMode {
@@ -30,11 +30,9 @@ export type WindowAction =
 export interface NavigationTabsProps {
     activeTab: Tab;
     onTabChange: (tab: Tab) => void;
-    isLight: boolean;
 }
 
 export interface HeaderProps {
-    isLight: boolean;
     title: string;
     url: string;
     onMinimize: () => Promise<void>;
@@ -43,7 +41,6 @@ export interface HeaderProps {
 }
 
 export interface FilesSectionProps {
-    isLight: boolean;
     transcripts: any[];
 }
 

@@ -55,11 +55,14 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ isLight }) => {
         <div className={`p-4 ${isLight ? 'bg-gray-50' : 'bg-gray-900'}`}>
             <div
                 className={`border-2 border-dashed rounded-lg p-6 mb-4 transition-colors
-                    ${isDragging 
-                        ? `${isLight ? 'border-purple-500 bg-purple-50' : 'border-purple-500 bg-purple-900 bg-opacity-20'}`
-                        : `${isLight 
-                            ? 'border-gray-300 hover:border-purple-400' 
-                            : 'border-gray-700 hover:border-purple-500'}`
+                    ${
+                        isDragging
+                            ? `${isLight ? 'border-purple-500 bg-purple-50' : 'border-purple-500 bg-purple-900 bg-opacity-20'}`
+                            : `${
+                                  isLight
+                                      ? 'border-gray-300 hover:border-purple-400'
+                                      : 'border-gray-700 hover:border-purple-500'
+                              }`
                     }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -67,9 +70,7 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ isLight }) => {
                 <div className="text-center">
                     <svg
                         className={`w-12 h-12 mx-auto mb-3 ${
-                            isDragging 
-                                ? 'text-purple-500' 
-                                : isLight ? 'text-gray-400' : 'text-white'
+                            isDragging ? 'text-purple-500' : isLight ? 'text-gray-400' : 'text-white'
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -93,14 +94,13 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ isLight }) => {
                     <div
                         key={file.id}
                         className={`flex items-center justify-between p-3 rounded-lg shadow-sm border ${
-                            isLight 
-                                ? 'bg-white border-gray-200' 
-                                : 'bg-gray-800 border-gray-700'
+                            isLight ? 'bg-white border-gray-200' : 'bg-gray-800 border-gray-700'
                         }`}>
                         <div className="flex items-center space-x-3">
-                            <div className={`p-2 rounded-lg ${
-                                isLight ? 'bg-purple-50' : 'bg-purple-900 bg-opacity-30'
-                            }`}>
+                            <div
+                                className={`p-2 rounded-lg ${
+                                    isLight ? 'bg-purple-50' : 'bg-purple-900 bg-opacity-30'
+                                }`}>
                                 <svg
                                     className="w-6 h-6 text-purple-500"
                                     fill="none"
@@ -115,20 +115,18 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ isLight }) => {
                                 </svg>
                             </div>
                             <div>
-                                <p className={`text-sm font-medium ${
-                                    isLight ? 'text-gray-900' : 'text-white'
-                                }`}>{file.name}</p>
-                                <p className={`text-xs ${
-                                    isLight ? 'text-gray-500' : 'text-white'
-                                }`}>{formatFileSize(file.size)}</p>
+                                <p className={`text-sm font-medium ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                                    {file.name}
+                                </p>
+                                <p className={`text-xs ${isLight ? 'text-gray-500' : 'text-white'}`}>
+                                    {formatFileSize(file.size)}
+                                </p>
                             </div>
                         </div>
 
                         <div className="flex items-center space-x-2">
                             {file.status === 'uploading' && (
-                                <div className={`w-24 h-2 rounded-full ${
-                                    isLight ? 'bg-gray-200' : 'bg-gray-700'
-                                }`}>
+                                <div className={`w-24 h-2 rounded-full ${isLight ? 'bg-gray-200' : 'bg-gray-700'}`}>
                                     <div
                                         className="bg-purple-500 h-2 rounded-full transition-all duration-500"
                                         style={{ width: `${file.progress}%` }}
@@ -138,14 +136,10 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ isLight }) => {
                             <button
                                 onClick={() => handleDelete(file.id)}
                                 className={`p-1 rounded-full transition-colors ${
-                                    isLight 
-                                        ? 'hover:bg-gray-100' 
-                                        : 'hover:bg-gray-700'
+                                    isLight ? 'hover:bg-gray-100' : 'hover:bg-gray-700'
                                 }`}>
                                 <svg
-                                    className={`w-5 h-5 ${
-                                        isLight ? 'text-gray-500' : 'text-white'
-                                    }`}
+                                    className={`w-5 h-5 ${isLight ? 'text-gray-500' : 'text-white'}`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24">

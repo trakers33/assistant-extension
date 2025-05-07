@@ -14,13 +14,13 @@ declare interface CustomEventMap {
 declare interface Document {
     addEventListener<K extends keyof CustomEventMap>(
         type: K,
-        listener: (this: Document, ev: CustomEventMap[K]) => void
+        listener: (this: Document, ev: CustomEventMap[K]) => void,
     ): void;
 }
 
 declare interface Window {
     addEventListener<K extends keyof CustomEventMap>(
         type: K,
-        listener: (this: Window, ev: CustomEventMap[K]) => void
+        listener: (this: Window, ev: CustomEventMap[K]) => void,
     ): void;
-} 
+}

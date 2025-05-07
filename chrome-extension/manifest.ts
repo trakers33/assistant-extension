@@ -30,7 +30,7 @@ const manifest = {
     version: packageJson.version,
     description: '__MSG_extensionDescription__',
     host_permissions: ['<all_urls>'],
-    permissions: ['storage', 'scripting', 'tabs', 'notifications', 'tabCapture', 'clipboardWrite','activeTab'],
+    permissions: ['storage', 'scripting', 'tabs', 'notifications', 'tabCapture', 'clipboardWrite', 'activeTab'],
     options_page: 'options/index.html',
     background: {
         service_worker: 'background.js',
@@ -57,8 +57,8 @@ const manifest = {
     web_accessible_resources: [
         {
             resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png', 'side-panel/*', 'inlinescripts/*'],
-            matches: ['*://meet.google.com/*']
-        }
+            matches: ['*://meet.google.com/*'],
+        },
     ],
 } satisfies chrome.runtime.ManifestV3;
 
