@@ -18,7 +18,7 @@ import { DisplayMode, WindowState, WindowAction } from '@extension/shared/lib/ty
 import { Tab } from './types/index';
 import { InsightCard } from '@extension/ui';
 import moment from 'moment';
-import { getProfiles, MeetingProfile } from '@extension/storage/lib/impl/optionsStorage';
+import { getProfiles, MeetingProfile, getAutoMerge } from '@extension/storage/lib/impl/optionsStorage';
 import ReactMarkdown from 'react-markdown';
 import 'github-markdown-css';
 import { SummarySection } from './components/SummarySection';
@@ -220,8 +220,9 @@ const SidePanel = () => {
             createdAt: Date.now(),
         };
 
-        // Store transcript
-        await addTranscript(transcript);
+        // Store transcript with auto-merge option
+        const autoMerge = await getAutoMerge();
+        await addTranscript(transcript, autoMerge);
         setStoredTranscripts(prev => [...prev, transcript]);
 
         // Group captions and create transcript text

@@ -1,7 +1,7 @@
 {
     "name": "@extension/injector",
     "version": "0.4.3",
-    "description": "chrome extension - google meet",
+    "description": "chrome extension - injector",
     "type": "module",
     "private": true,
     "sideEffects": true,

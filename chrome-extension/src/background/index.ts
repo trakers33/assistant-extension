@@ -4,7 +4,7 @@ import { CaptionData, Participant } from '@extension/shared/lib/types/meeting';
 import { runtime, storage } from 'webextension-polyfill';
 import { transcriptStorage, addTranscript } from '@extension/storage';
 import { getWebSocketConfig, WebSocketConfig } from '@extension/storage/lib/ws-config';
-import { getProfiles, optionsStorage } from '@extension/storage/lib/impl/optionsStorage';
+import { getProfiles, optionsStorage, getAutoMerge } from '@extension/storage/lib/impl/optionsStorage';
 
 const keepAlive = () => setInterval(chrome.runtime.getPlatformInfo, 20e3);
 chrome.runtime.onStartup.addListener(keepAlive);
@@ -273,14 +273,16 @@ chrome.runtime.onConnect.addListener(async (port: chrome.runtime.Port) => {
         port.onMessage.addListener((message: RuntimeMessage) => {
             console.log('\x1b[32m%s\x1b[0m', 'message -> script port', message);
             if (message.to === MessageDestination.background && message.type === MessageType.SAVE_TRANSCRIPT) {
-                addTranscript(message.data)
-                    .then(() => {
-                        port.postMessage({ success: true });
-                    })
-                    .catch((error: Error) => {
-                        console.error('Error saving transcript:', error);
-                        port.postMessage({ success: false, error: error.message });
-                    });
+                getAutoMerge().then(autoMerge => {
+                    addTranscript(message.data, autoMerge)
+                        .then(() => {
+                            port.postMessage({ success: true });
+                        })
+                        .catch((error: Error) => {
+                            console.error('Error saving transcript:', error);
+                            port.postMessage({ success: false, error: error.message });
+                        });
+                });
             }
         });
 
@@ -341,12 +343,14 @@ chrome.runtime.onMessage.addListener((message: RuntimeMessage, sender, sendRespo
         // Handle specific message types
         switch (message.type) {
             case MessageType.SAVE_TRANSCRIPT:
-                addTranscript(message.data)
-                    .then(() => sendResponse({ success: true }))
-                    .catch((error: Error) => {
-                        console.error('Error saving transcript:', error);
-                        sendResponse({ success: false, error: error.message });
-                    });
+                getAutoMerge().then(autoMerge => {
+                    addTranscript(message.data, autoMerge)
+                        .then(() => sendResponse({ success: true }))
+                        .catch((error: Error) => {
+                            console.error('Error saving transcript:', error);
+                            sendResponse({ success: false, error: error.message });
+                        });
+                });
                 return; // Required for async response
             case MessageType.USERS_UPDATE:
                 // Handle users update exception

@@ -48,8 +48,8 @@ const manifest = {
     content_scripts: [
         {
             matches: ['*://meet.google.com/*'],
-            js: ['inlinescripts/inline.injector.iife.js'],
-            css: ['inlinescripts/injector.css'],
+            js: ['inlinescripts/injector/inline.injector.iife.js'],
+            css: ['inlinescripts/injector/injector.css'],
             run_at: 'document_start',
         },
     ],

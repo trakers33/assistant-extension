@@ -74,7 +74,7 @@ function initializeRTC(): void {
             (window.location.pathname.match(/\S\S\S-\S\S\S\S-\S\S\S/) || window.location.pathname === '/new')
         ) {
             const head = document.head || document.documentElement;
-            injectScript(head, chrome.runtime.getURL('./inlinescripts/inline.googlemeet.iife.js'));
+            injectScript(head, chrome.runtime.getURL('./inlinescripts/googlemeet/inline.googlemeet.iife.js'));
 
             // Initialize communication bridge
             initializeCommunicationBridge();

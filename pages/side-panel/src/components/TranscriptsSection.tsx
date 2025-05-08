@@ -3,7 +3,7 @@ import { CaptionData } from '@extension/shared/lib/types/meeting';
 import { GroupedCaption, TranscriptsSectionProps } from '@extension/shared/lib/types/side-panel';
 import { Switch } from '@headlessui/react';
 import { useStorage } from '@extension/shared';
-import { optionsStorage, setAutoCaptions } from '@extension/storage';
+import { optionsStorage, setAutoCaptions, setAutoMerge } from '@extension/storage';
 import moment from 'moment';
 import { useTheme } from '@extension/ui/lib/components/ThemeProvider';
 
@@ -16,6 +16,10 @@ export const TranscriptsSection = ({ captions, onDownload }: TranscriptsSectionP
 
     const handleAutoCaptionsToggle = () => {
         setAutoCaptions(!options.autoCaptions);
+    };
+
+    const handleAutoMergeToggle = () => {
+        setAutoMerge(!options.autoMerge);
     };
 
     useEffect(() => {
@@ -106,6 +110,20 @@ export const TranscriptsSection = ({ captions, onDownload }: TranscriptsSectionP
                         />
                     </Switch>
                     <span className={`text-sm ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>Auto-captions</span>
+
+                    <Switch
+                        checked={options.autoMerge}
+                        onChange={handleAutoMergeToggle}
+                        className={`${
+                            options.autoMerge ? 'bg-blue-600' : 'bg-gray-300'
+                        } relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ml-4`}>
+                        <span
+                            className={`${
+                                options.autoMerge ? 'translate-x-5' : 'translate-x-1'
+                            } inline-block h-3 w-3 transform rounded-full bg-white transition-transform`}
+                        />
+                    </Switch>
+                    <span className={`text-sm ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>Auto Merge</span>
                 </div>
                 {captions.length > 0 && (
                     <button

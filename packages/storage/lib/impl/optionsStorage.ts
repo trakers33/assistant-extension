@@ -19,6 +19,7 @@ export interface Options {
     theme: Theme;
     profiles?: MeetingProfile[];
     openAIApiKey?: string;
+    autoMerge?: boolean;
 }
 
 const defaultProfiles: MeetingProfile[] = [
@@ -59,6 +60,7 @@ const defaultOptions: Options = {
     theme: 'light',
     profiles: defaultProfiles,
     openAIApiKey: '',
+    autoMerge: true,
 };
 
 export const optionsStorage = createStorage<Options>('options', defaultOptions, {
@@ -88,5 +90,17 @@ export const setProfiles = async (profiles: MeetingProfile[]): Promise<void> => 
     await optionsStorage.set(current => ({
         ...current,
         profiles,
+    }));
+};
+
+export const getAutoMerge = async (): Promise<boolean> => {
+    const options = await optionsStorage.get();
+    return options.autoMerge ?? true;
+};
+
+export const setAutoMerge = async (value: boolean): Promise<void> => {
+    await optionsStorage.set(current => ({
+        ...current,
+        autoMerge: value,
     }));
 };
