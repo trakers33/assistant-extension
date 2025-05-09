@@ -30,7 +30,21 @@ const manifest = {
     version: packageJson.version,
     description: '__MSG_extensionDescription__',
     host_permissions: ['<all_urls>'],
-    permissions: ['storage', 'scripting', 'tabs', 'notifications', 'tabCapture', 'clipboardWrite', 'activeTab'],
+    permissions: [
+        'identity',
+        'storage',
+        'scripting',
+        'tabs',
+        'notifications',
+        'tabCapture',
+        'clipboardWrite',
+        'activeTab',
+        'sidePanel',
+    ],
+    oauth2: {
+        client_id: '264703403342-ruk7uvthi61643umhohhjtl1suv4mfv4.apps.googleusercontent.com',
+        scopes: ['openid', 'email', 'profile'],
+    },
     options_page: 'options/index.html',
     background: {
         service_worker: 'background.js',

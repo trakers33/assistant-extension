@@ -6,21 +6,19 @@ import { useStorage } from '@extension/shared';
 import { optionsStorage, setAutoCaptions, setAutoMerge } from '@extension/storage';
 import moment from 'moment';
 import { useTheme } from '@extension/ui/lib/components/ThemeProvider';
+import { InsightsToggle } from '@extension/ui/lib/components/InsightsToggle';
 
-export const TranscriptsSection = ({ captions, onDownload }: TranscriptsSectionProps & { onDownload: () => void }) => {
+export const TranscriptsSection = ({
+    captions,
+    onDownload,
+    insightsEnabled = false,
+    onToggleInsights = () => {},
+}: TranscriptsSectionProps & { onDownload: () => void; insightsEnabled?: boolean; onToggleInsights?: () => void }) => {
     const { theme } = useTheme();
     const isLight = theme === 'light';
     const containerRef = useRef<HTMLDivElement>(null);
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
     const options = useStorage(optionsStorage);
-
-    const handleAutoCaptionsToggle = () => {
-        setAutoCaptions(!options.autoCaptions);
-    };
-
-    const handleAutoMergeToggle = () => {
-        setAutoMerge(!options.autoMerge);
-    };
 
     useEffect(() => {
         if (containerRef.current && shouldAutoScroll) {
@@ -97,33 +95,7 @@ export const TranscriptsSection = ({ captions, onDownload }: TranscriptsSectionP
             onScroll={handleScroll}>
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <Switch
-                        checked={options.autoCaptions}
-                        onChange={handleAutoCaptionsToggle}
-                        className={`${
-                            options.autoCaptions ? 'bg-blue-600' : 'bg-gray-300'
-                        } relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}>
-                        <span
-                            className={`${
-                                options.autoCaptions ? 'translate-x-5' : 'translate-x-1'
-                            } inline-block h-3 w-3 transform rounded-full bg-white transition-transform`}
-                        />
-                    </Switch>
-                    <span className={`text-sm ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>Auto-captions</span>
-
-                    <Switch
-                        checked={options.autoMerge}
-                        onChange={handleAutoMergeToggle}
-                        className={`${
-                            options.autoMerge ? 'bg-blue-600' : 'bg-gray-300'
-                        } relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ml-4`}>
-                        <span
-                            className={`${
-                                options.autoMerge ? 'translate-x-5' : 'translate-x-1'
-                            } inline-block h-3 w-3 transform rounded-full bg-white transition-transform`}
-                        />
-                    </Switch>
-                    <span className={`text-sm ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>Auto Merge</span>
+                    <InsightsToggle isActive={insightsEnabled} onToggle={onToggleInsights} />
                 </div>
                 {captions.length > 0 && (
                     <button

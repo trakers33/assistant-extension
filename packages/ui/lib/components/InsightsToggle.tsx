@@ -6,7 +6,7 @@ export interface InsightsToggleProps {
 export const InsightsToggle = ({ isActive, onToggle }: InsightsToggleProps) => {
     return (
         <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Active</span>
+            <span className="text-sm text-gray-600 dark:text-gray-100">Active</span>
             <button
                 onClick={onToggle}
                 className="relative w-8 h-4 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400"

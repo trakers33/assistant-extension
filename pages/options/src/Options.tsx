@@ -14,7 +14,8 @@ import {
     MeetingProfile,
     themeStorage,
 } from '@extension/storage';
-import { ToggleButton, Toast } from '@extension/ui';
+import { Toast } from '@extension/ui';
+import { InsightsToggle } from '@extension/ui/lib/components/InsightsToggle';
 import { t } from '@extension/i18n';
 import { useState, useEffect, useRef } from 'react';
 import { MessageType, MessageSource, MessageDestination } from '@extension/shared/lib/types/runtime';
@@ -361,17 +362,17 @@ const Options = () => {
                     {/* Tab Navigation */}
                     <div className="flex border-b mb-8">
                         <button
-                            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'settings' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'settings' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-100 dark:hover:text-gray-200'}`}
                             onClick={() => setActiveTab('settings')}>
                             Settings
                         </button>
                         <button
-                            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'profiles' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'profiles' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-100 dark:hover:text-gray-200'}`}
                             onClick={() => setActiveTab('profiles')}>
                             Profile Management
                         </button>
                         <button
-                            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'transcripts' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'transcripts' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-100 dark:hover:text-gray-200'}`}
                             onClick={() => setActiveTab('transcripts')}>
                             Saved Transcripts
                         </button>
@@ -390,16 +391,35 @@ const Options = () => {
                                                 Automatically turn on captions when joining a meeting
                                             </p>
                                         </div>
-                                        <ToggleButton
-                                            onClick={() =>
+                                        <InsightsToggle
+                                            isActive={!!options.autoCaptions}
+                                            onToggle={() =>
                                                 optionsStorage.set(current => ({
                                                     ...current,
                                                     autoCaptions: !current.autoCaptions,
                                                 }))
                                             }
-                                            className="!mt-0 min-w-[80px]">
-                                            {options.autoCaptions ? 'On' : 'Off'}
-                                        </ToggleButton>
+                                        />
+                                    </div>
+                                    {/* Auto Merge Toggle */}
+                                    <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-left">
+                                                <h3 className="font-medium text-left">Auto Merge Transcripts</h3>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    Automatically merge meeting transcripts for the same meeting
+                                                </p>
+                                            </div>
+                                            <InsightsToggle
+                                                isActive={!!options.autoMerge}
+                                                onToggle={() =>
+                                                    optionsStorage.set(current => ({
+                                                        ...current,
+                                                        autoMerge: !current.autoMerge,
+                                                    }))
+                                                }
+                                            />
+                                        </div>
                                     </div>
                                     {/* WebSocket Configuration */}
                                     <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
@@ -411,13 +431,12 @@ const Options = () => {
                                                         Enable real-time streaming of meeting data
                                                     </p>
                                                 </div>
-                                                <ToggleButton
-                                                    onClick={() =>
+                                                <InsightsToggle
+                                                    isActive={!!wsConfig.enabled}
+                                                    onToggle={() =>
                                                         setWsConfig({ ...wsConfig, enabled: !wsConfig.enabled })
                                                     }
-                                                    className="!mt-0 min-w-[80px]">
-                                                    {wsConfig.enabled ? 'On' : 'Off'}
-                                                </ToggleButton>
+                                                />
                                             </div>
                                             <div>
                                                 <label

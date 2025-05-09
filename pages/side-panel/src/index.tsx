@@ -2,13 +2,21 @@ import { createRoot } from 'react-dom/client';
 import '@src/index.css';
 
 import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
-import { themeStorage, transcriptStorage, addTranscript, Transcript } from '@extension/storage';
+import {
+    themeStorage,
+    transcriptStorage,
+    addTranscript,
+    Transcript,
+    SupabaseSession,
+    supabaseSessionStorage,
+    getSupabaseSession,
+} from '@extension/storage';
 import { useState, useEffect, useCallback, useReducer, useRef } from 'react';
 import { ParticipantsSection } from './components/ParticipantsSection';
 import { TranscriptsSection } from './components/TranscriptsSection';
 import { FilesSection } from './components/FilesSection';
 import { Toast } from '@extension/ui';
-import { Header } from './components/Header';
+import { Header, HeaderActions, HeaderTitle } from './components/Header';
 import { NavigationTabs } from './components/NavigationTabs';
 import { CaptureControls } from './components/CaptureControls';
 import { useMessageHandler } from './hooks/useMessageHandler';
@@ -22,7 +30,11 @@ import { getProfiles, MeetingProfile, getAutoMerge } from '@extension/storage/li
 import ReactMarkdown from 'react-markdown';
 import 'github-markdown-css';
 import { SummarySection } from './components/SummarySection';
-import { ThemeProvider, useTheme, Theme } from '@extension/ui/lib/components/ThemeProvider';
+import { ThemeProvider, useTheme } from '@extension/ui/lib/components/ThemeProvider';
+import { MeetingPage } from './pages/MeetingPage';
+import { NotInMeetingPage } from './pages/NotInMeetingPage';
+import { supabase } from './services/supabaseClient';
+import { LoginPage } from './pages/LoginPage';
 
 const windowReducer = (state: WindowState, action: WindowAction): WindowState => {
     switch (action.type) {
@@ -36,30 +48,6 @@ const windowReducer = (state: WindowState, action: WindowAction): WindowState =>
             return state;
     }
 };
-
-// Add WaitingMessage component
-const WaitingMessage = () => (
-    <div className={`flex flex-col items-center justify-center h-full p-4 text-gray-600 dark:text-gray-400`}>
-        <div className="text-center">
-            <svg
-                className={`w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-gray-500`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-            </svg>
-            <h3 className={`text-lg font-medium mb-2 text-gray-900 dark:text-white`}>Waiting for Meeting</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-                Please join a Google Meet call to start using the assistant.
-            </p>
-        </div>
-    </div>
-);
 
 // Add grouping function
 const groupCaptions = (captions: CaptionData[]) => {
@@ -125,20 +113,7 @@ const formatTimeRange = (start: number, end: number) => {
 
 const SidePanel = () => {
     const { isInsightsActive, insights, currentInsight, removeInsight, navigateInsight } = useMessageHandler();
-
-    // Theme state managed locally and in localStorage
-    const [theme, setTheme] = useState<Theme>(() => {
-        if (typeof window !== 'undefined') {
-            return (localStorage.getItem('ui-theme') as Theme) || 'light';
-        }
-        return 'light';
-    });
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('ui-theme', theme);
-        }
-    }, [theme]);
-
+    const { theme, setTheme } = useTheme();
     const isLight = theme === 'light';
     const [activeTab, setActiveTab] = useState<Tab>(Tab.Transcripts);
     const [showToast, setShowToast] = useState(false);
@@ -170,10 +145,15 @@ const SidePanel = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [summaryError, setSummaryError] = useState<string | null>(null);
 
+    const [insightsEnabled, setInsightsEnabled] = useState(false);
+
+    const [user, setUser] = useState<any>(null);
+    const [session, setSession] = useState<SupabaseSession | null>(null);
+
     // Request meeting info when component mounts
-    const requestMeetingInfo = async () => {
+    const requestMeetingInfo = () => {
         try {
-            await chrome.runtime.sendMessage({
+            chrome.runtime.sendMessage({
                 type: MessageType.REQUEST_MEETING_INFO,
                 to: MessageDestination.inline,
                 from: MessageSource.sidePanel,
@@ -382,87 +362,116 @@ const SidePanel = () => {
         }
     };
 
+    const handleToggleInsights = useCallback(() => {
+        setInsightsEnabled(enabled => {
+            const newEnabled = !enabled;
+            // Send message to background to enable/disable insights (WS)
+            chrome.runtime.sendMessage({
+                type: 'TOGGLE_INSIGHTS',
+                to: MessageDestination.background,
+                from: MessageSource.sidePanel,
+                data: { enabled: newEnabled, meetingId },
+            });
+            return newEnabled;
+        });
+    }, [meetingId]);
+
+    useEffect(() => {
+        // Try to restore session from cache
+        (async () => {
+            const cachedSession = await getSupabaseSession();
+            if (cachedSession && cachedSession.access_token && cachedSession.refresh_token) {
+                await supabase.auth.setSession({
+                    access_token: cachedSession.access_token,
+                    refresh_token: cachedSession.refresh_token,
+                });
+                setUser(cachedSession.user);
+                setSession(cachedSession);
+            } else {
+                setUser(null);
+                setSession(null);
+            }
+        })();
+
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            if (session) {
+                supabaseSessionStorage.set(session as SupabaseSession);
+                setSession(session as SupabaseSession);
+            } else {
+                supabaseSessionStorage.set(null);
+                setSession(null);
+            }
+        });
+
+        return () => {
+            listener?.subscription.unsubscribe();
+        };
+    }, []);
+
+    if (!user) {
+        return <LoginPage />;
+    }
+
+    // Always show HeaderActions for logged-in pages
     return (
-        <ThemeProvider>
-            <div className={`flex flex-col h-full bg-white dark:bg-gray-900`}>
-                <Header
-                    title={title || ''}
-                    url={url || ''}
-                    onMinimize={handleMinimize}
-                    onExpand={handleExpand}
-                    isExpanded={windowState.isExpanded}
+        <div className={`flex flex-col h-full bg-white dark:bg-gray-900`}>
+            <HeaderActions user={user} />
+            {isMeetingReady && <HeaderTitle title={title} url={url} isLight={isLight} />}
+            {isMeetingReady ? (
+                <MeetingPage
+                    isLight={isLight}
+                    setTheme={setTheme}
+                    title={title}
+                    url={url}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    isInsightsActive={isInsightsActive}
+                    insights={insights}
+                    currentInsight={currentInsight}
+                    removeInsight={removeInsight}
+                    navigateInsight={navigateInsight}
+                    captions={captions}
+                    handleDownloadTranscript={handleDownloadTranscript}
+                    participants={participants}
+                    profiles={profiles}
+                    handleGenerateSummary={handleGenerateSummary}
+                    summaryResult={summaryResult}
+                    isGenerating={isGenerating}
+                    summaryError={summaryError}
                 />
-                {isMeetingReady ? (
-                    <>
-                        <NavigationTabs activeTab={activeTab} onTabChange={setActiveTab} />
-                        <div className="flex-1 overflow-y-auto">
-                            {activeTab === Tab.Transcripts && (
-                                <>
-                                    {isInsightsActive && insights.length > 0 && (
-                                        <div className="p-4">
-                                            <InsightCard
-                                                insight={insights[currentInsight]}
-                                                onRemove={removeInsight}
-                                                totalInsights={insights.length}
-                                                currentIndex={currentInsight}
-                                                onNavigate={navigateInsight}
-                                            />
-                                        </div>
-                                    )}
-                                    <TranscriptsSection
-                                        captions={captions}
-                                        onDownload={handleDownloadTranscript}
-                                        isLight={isLight}
-                                    />
-                                </>
-                            )}
-                            {activeTab === Tab.Participants && (
-                                <ParticipantsSection participants={participants} isLight={isLight} />
-                            )}
-                            {activeTab === Tab.Summary && profiles.length > 0 && (
-                                <div className="pt-2">
-                                    <SummarySection
-                                        profiles={profiles}
-                                        onGenerateSummary={handleGenerateSummary}
-                                        generatedSummary={summaryResult.summary}
-                                        actionItems={summaryResult.actionItems}
-                                        isGenerating={isGenerating}
-                                        error={summaryError}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                        {/* <CaptureControls
-                            audioEnabled={audioEnabled}
-                            videoEnabled={videoEnabled}
-                            onAudioToggle={() => setAudioEnabled(!audioEnabled)}
-                            onVideoToggle={() => setVideoEnabled(!videoEnabled)}
-                            meetingId={meetingId || 'default'}
-                        /> */}
-                    </>
-                ) : (
-                    <WaitingMessage />
-                )}
-                {showToast && (
-                    <Toast
-                        message="Transcript downloaded successfully!"
-                        isVisible={showToast}
-                        onClose={() => setShowToast(false)}
-                    />
-                )}
-                {showThemeToast && (
-                    <Toast
-                        message={`Theme set to ${theme}`}
-                        isVisible={showThemeToast}
-                        onClose={() => setShowThemeToast(false)}
-                    />
-                )}
-            </div>
-        </ThemeProvider>
+            ) : (
+                <NotInMeetingPage isLight={isLight} setTheme={setTheme} />
+            )}
+            {showToast && (
+                <Toast
+                    message="Transcript downloaded successfully!"
+                    isVisible={showToast}
+                    onClose={() => setShowToast(false)}
+                />
+            )}
+            {showThemeToast && (
+                <Toast
+                    message={`Theme set to ${theme}`}
+                    isVisible={showThemeToast}
+                    onClose={() => setShowThemeToast(false)}
+                />
+            )}
+        </div>
     );
 };
 
-const App = withErrorBoundary(withSuspense(SidePanel, <div> Loading ... </div>), <div> Error Occured </div>);
+const App = withErrorBoundary(
+    withSuspense(
+        () => (
+            <ThemeProvider>
+                <SidePanel />
+            </ThemeProvider>
+        ),
+        <div> Loading ... </div>,
+    ),
+    <div> Error Occured </div>,
+);
 
 function init() {
     const appContainer = document.querySelector('#app-container');

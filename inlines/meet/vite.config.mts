@@ -18,6 +18,6 @@ export default withPageConfig({
             formats: ['iife'],
             entry: resolve(srcDir, 'index.js'),
         },
-        outDir: resolve(rootDir, '..', '..', 'dist', 'inlinescripts','googlemeet'),
+        outDir: resolve(rootDir, '..', '..', 'dist', 'inlinescripts', 'googlemeet'),
     },
 });

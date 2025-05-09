@@ -10,4 +10,9 @@ interface ICebCliEnv {
     readonly CLI_CEB_FIREFOX: string;
 }
 
+interface ICebSupabaseEnv {
+    readonly CEB_SUPABASE_URL: string;
+    readonly CEB_SUPABASE_ANON_KEY: string;
+}
+
 export type IEnv = ICebEnv & ICebCliEnv & typeof dynamicEnvValues;
