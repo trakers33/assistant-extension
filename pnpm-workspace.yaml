@@ -1,7 +1,7 @@
 packages:
-  - 'chrome-extension'
-  - 'pages/*'
-  - 'inlines/*'
-  - 'packages/*'
-  - 'tests/*'
-  - 'servers/*'
+  - 'src/chrome-extension'
+  - 'src/ui'
+  - 'src/background'
+  - 'src/pages/*'
+  - 'src/inlines/*'
+  - 'src/packages/*'

@@ -1,0 +1,32 @@
+{
+    "name": "@extension/background",
+    "version": "0.1.0",
+    "description": "chrome extension - background scripts",
+    "type": "module",
+    "private": true,
+    "sideEffects": true,
+    "files": [
+        "dist/**"
+    ],
+    "scripts": {
+        "clean:node_modules": "pnpx rimraf node_modules",
+        "clean:turbo": "rimraf .turbo",
+        "clean": "pnpm clean:turbo && pnpm clean:node_modules",
+        "build": "vite build",
+        "dev": "vite build --mode development",
+        "lint": "eslint .",
+        "lint:fix": "pnpm lint --fix",
+        "prettier": "prettier . --write --ignore-path ../../.prettierignore",
+        "type-check": "tsc --noEmit"
+    },
+    "dependencies": {
+        "webextension-polyfill": "0.12.0",
+        "openai": "4.93.0",
+        "@extension/shared": "workspace:*",
+        "@extension/storage": "workspace:*"
+    },
+    "devDependencies": {
+        "@extension/tsconfig": "workspace:*",
+        "@extension/vite-config": "workspace:*"
+    }
+}
